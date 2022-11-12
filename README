@@ -1,0 +1,4 @@
+Requirements
+pip install flask
+
+1. python main.py
