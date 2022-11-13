@@ -6,7 +6,7 @@ db = conn.db
 def createUser():
     db.create_collection("user")
     vexpr={
-        "$jsonSchema" : {
+        "$jsonSchema" : {#이해를 돕기 위한 schema입니다. 실제로 적용 안됨
             "title" : "User_schema",
             "description" : "User schema contains email, password",
             "bsonType" : "object",
@@ -27,7 +27,7 @@ def createUser():
 
 def createContent():
     db.create_collection("content")
-    vexpr={
+    vexpr={#이해를 돕기 위한 schema입니다. 실제로 적용 안됨
         "$jsonSchema" : {
             "title" : "Content_Schema",
             "description" : "Content_Schema detail",
@@ -54,6 +54,37 @@ def createContent():
         }
     }
     db.content.create_index(['content-id',1],name='content-id',unique=True)
-
+def createChat():
+    #db.create_collection("chat")
+    #이해를 돕기 위한 schema입니다. 실제로 적용 안됨
+    vexpr={
+        "$jsonSchema" : {
+            "title" : "Content_Schema",
+            "description" : "Content_Schema detail",
+            "bsonType" : "object",
+            "required" : ["title", "targetMember","dueDate","detail","currentMember","writer","participants"],
+            "properties" : {
+                "owner":{
+                    "bsonType":"string",
+                },
+                "participant" : {
+                    "bsonType" : "string",
+                },
+                "chat-id" : {
+                    "bsonType" : "integer",
+                },
+                "chats" : {
+                    "bsonType" : {
+                        'time':'integer',
+                        'sender':'email',
+                        'text':'string'
+                    }
+                },
+                "detail" : {
+                    "bsonType" : "string",
+                },
+            }
+        }
+    }
 if __name__=="__main__":
-    createContent()
+    createChat()
