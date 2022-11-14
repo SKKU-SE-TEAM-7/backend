@@ -4,7 +4,8 @@ from mongo.connection import db
 from . import user
 import random
 import datetime
-from bson.json_util import dumps
+
+content_schema=['title','detail','targetMember','dueDate','content-id','image-url','owner','currentMember']
 
 def find_recent():
     try:
@@ -14,35 +15,10 @@ def find_recent():
     except Exception as e:
         print(e)
         return False
-def new_content(data):
+def new_content(data,token):
     try:
-        content_collection=db.content
-        while True:
-            if not content_collection.count_documents({"content-id":(id:=random.randint(1,10000000))}):break
-        data['content-id'] = id
-        data['image-url']= "url"
-        data['targetMember']=int(data['targetMember'])
-        email = user.getUser(data['token'])['email']
-        data['writer']=email
-        data['currentMember']=1
-        data.pop('token',None)
-        data['creation_time']=str(datetime.datetime.now())
-        content_collection.insert_one(data)
+        
         return True
-    except Exception as e:
-        print(e)
-        return False
-def get_content(content_id):
-    try:
-        content_collection=db.content
-        if not (tar:=content_collection.find_one({"content-id":content_id})):
-            data={}
-            data['content-id'] = tar['content-id']
-            data['image-url']= tar['image-url']
-            data['detail']=tar['detail']
-            data['writer']=tar['writer']
-            return data
-        return False
     except Exception as e:
         print(e)
         return False
@@ -51,32 +27,60 @@ def get_content(content_id):
 @app.route('/content/new',methods=['POST'])
 def post_content():
     try:
-        if new_content(request.form.to_dict()):
-            return jsonify({"message":"upload success"})
-        return jsonify({"message":"invalid password"})
+        content_collection=db.content
+        while True:
+            if not content_collection.count_documents({"content-id":(id:=random.randint(1,10000000))}):break
+        data=request.form.to_dict()
+        data['content-id'] = id
+        data['image-url']= "url"
+        data['targetMember']=int(data['targetMember'])
+        email = user.getUser(request.args.get('token'))['email']
+        data['owner']=email
+        data['currentMember']=0
+        data['participant']=[]
+        data['creation_time']=str(datetime.datetime.now())
+        if content_collection.insert_one(data):
+            return jsonify({"message":"upload success","data":{k:d for k,d in data.items() if type(d) is str}}),200
+        return jsonify({"message":"upload fail"}),201
     except Exception as e:
-        return jsonify({'status':501,'error':str(e)})
-
+        return jsonify({'error':str(e)}),501
 @app.route('/content/get',methods=['GET'])
 def get_content():
     try:
-        data= get_content(request.args.get('content-id'))
-        if data:
-            return jsonify(data)
-        return jsonify({"message":"get content fail"})
+        raw=db.content.find_one({"content-id":int(request.args.get('content-id'))})
+        email=user.getUser(request.args.get('token'))['email'] 
+        if raw:
+            data={k:v for k,v in raw.items() if k in content_schema}
+            data['is_joined']= email in raw['participant']
+            data['chat-id']=db.chat.find_one({"owner":data['owner'],"participant":email})['chat-id'] if data['is_joined'] else 0
+            return jsonify({"content":data}),200
+        return jsonify({"message":"invalid content id"}),201
     except Exception as e:
-        return jsonify({'status':501,'error':str(e)})
+        return jsonify({'error':str(e)}),501
 
 
 @app.route('/content/getRecent',methods=['GET'])
 def get_recent():
     try:
         raw=find_recent()
-        contents=[{key:item for key,item in x.items() if type(item) is str} for x in raw]
-        return jsonify({'status':200,'list':contents})
+        contents=[{key:item for key,item in x.items() if key in content_schema} for x in raw]
+        return jsonify({'list':contents}),200
     except Exception as e:
-        return jsonify({'status':501,'message':str(e)})
+        return jsonify({'message':str(e)}),501
 @app.route('/content/join',methods=['GET'])
 def join():
-    return
-
+    try:
+        email=user.getUser(request.args.get('token'))['email']
+        joined=db.content.find_one({'content-id':int(request.args.get('content-id'))})
+        if not joined:
+            return jsonify({"message":"wrong content id"}),201
+        if joined['currentMember']==joined['targetMember']:
+            return jsonify({'message':"Exceed Member"}),201
+        db.content.update_one({'content-id':int(request.args.get('content-id'))}, {"$push":{'participant':email},"$inc":{'currentMember':1}})
+        while True:
+            if not db.chat.count_documents({"chat-id":(id:=random.randint(1,10000000))}):break
+        db.chat.insert_one({'owner':joined['owner'],'participant':email,'chats':[],'chat-id':id})
+        db.user.update_one({'User_email':email},{'$push':{'join-content':request.args.get('content-id')}})
+        return jsonify({"message":"join success"}),200
+    except Exception as e:
+        return jsonify({"error":str(e)}),502
