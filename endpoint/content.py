@@ -10,15 +10,8 @@ content_schema=['title','detail','targetMember','dueDate','content-id','image-ur
 def find_recent():
     try:
         content_collection=db.content
-        contents=content_collection.find({}).sort([('creation_time',1)]).limit(10)
+        contents=content_collection.find({}).sort([('creation_time',1)]).limit(20)
         return contents
-    except Exception as e:
-        print(e)
-        return False
-def new_content(data,token):
-    try:
-        
-        return True
     except Exception as e:
         print(e)
         return False
@@ -84,3 +77,13 @@ def join():
         return jsonify({"message":"join success"}),200
     except Exception as e:
         return jsonify({"error":str(e)}),502
+@app.route('/content/search',methods=['GET'])
+def search_content():
+    try:
+        keyword=request.args.get('keyword').replace('+',')(?=.*')
+        raw=db.content.find({'$or':[{'title':{'$regex':'(?=.*'+keyword+')'}},{'detail':{'$regex':'(?=.*'+keyword+')'}}]}).limit(20)
+        print(raw,{'$or':[{'title':{'$regex':'(?=.*'+keyword+')'}},{'detail':{'$regex':'(?=.*'+keyword+')'}}]})
+        contents=[{key:item for key,item in x.items() if key in content_schema} for x in raw]
+        return jsonify({'list':contents}),200
+    except Exception as e:
+        return jsonify({'message':str(e)}),501
