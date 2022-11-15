@@ -55,10 +55,10 @@ def register():
         nickname=request.form.get('nickname')
         code=request.form.get('authcode')
         if not (auth_code.get(email) and auth_code[email]==int(code)):
-            return jsonify({'message':'인증번호 오류'}),201
+            return jsonify({'message':'auth code'}),201
         user_collection=db.user
         if user_collection.count_documents({'User_email':email})>0:
-            return jsonify({'message':'중복된 이메일'}),202
+            return jsonify({'message':'email already exist'}),202
         user_collection.insert_one({'User_email':email,'User_pw':generate_password_hash(password),'nickname':nickname,'accumulate-star':0,'star-count':0,'join-content':[]})
         return jsonify({"message":"register success"}),200
     except Exception as e:
@@ -100,9 +100,9 @@ def authcode():
     try:
         email=request.args.get('user_email')
         if db.user_collection.count_documents({'User_email':email})>0:
-            return jsonify({'message':'이미 존재하는 이메일'}),201
+            return jsonify({'message':'email already exist'}),201
         if not email.split('@')[1] in ['skku.edu','g.skku.edu']:
-            return jsonify({'message':'허용되지 않는 도메인'}), 202
+            return jsonify({'message':'not allowed domain'}), 202
         smtp = smtplib.SMTP('smtp.gmail.com', 587)
         smtp.ehlo()      # say Hello
         smtp.starttls()  # TLS 사용시 필요
@@ -116,6 +116,6 @@ def authcode():
         
         smtp.quit()
         auth_code[email]=code
-        return jsonify({'message': '인증번호 전송 성공'}),200
+        return jsonify({'message': 'auth code send success'}),200
     except Exception as e:
         return jsonify({'error':str(e)}),501
