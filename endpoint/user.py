@@ -16,19 +16,6 @@ user_schema=['user_email','nickname','accumulate-star','join-content']
 def getUser(token):
     return session[int(token)]
 
-def check_login(email,pw):
-    try:
-        user_collection=db.user
-        if valid:=user_collection.find_one({'user_email':email}):
-            if check_password_hash(valid.get("user_password"),pw):
-                while True:
-                    if not session.get(token:=random.randint(10000000,100000000)):break
-                session[token]={"email":email}
-                #TO-DO: db에 token을 넣어서 새로 로그인하면 이전 token을 만료시켜야함....
-                return token
-            return None
-    except Exception as e:
-        return None
 
 
 
@@ -39,9 +26,15 @@ def login():
     try:
         email=request.form.get('user_email')
         password=request.form.get('user_password')
-        if email and password and (token:=check_login(email,password)):
-            return jsonify({"message":"login success","token":token}) ,200
-        return jsonify({"message":"invalid password"}),201
+        user_collection=db.user
+        if valid:=user_collection.find_one({'user_email':email}):
+            if check_password_hash(valid.get("user_password"),password):
+                while True:
+                    if not session.get(token:=random.randint(10000000,100000000)):break
+                session[token]={"email":email}
+                return jsonify({"message":"login success","token":token}) ,200
+            return jsonify({"message":"invalid password"}),201
+        return jsonify({'message':"invalid email"}),202
     except Exception as e:
         return jsonify({'error':str(e)}),301
 
@@ -57,7 +50,7 @@ def register():
         user_collection=db.user
         if user_collection.count_documents({'user_email':email})>0:
             return jsonify({'message':'email already exist'}),202
-        user_collection.insert_one({'user_email':email,'user_pw':generate_password_hash(password),'nickname':nickname,'accumulate-star':0,'star-count':0,'join-content':[]})
+        user_collection.insert_one({'user_email':email,'user_password':generate_password_hash(password),'nickname':nickname,'accumulate-star':0,'star-count':0,'join-content':[]})
         return jsonify({"message":"register success"}),200
     except Exception as e:
         return jsonify({'error':str(e)}),301
