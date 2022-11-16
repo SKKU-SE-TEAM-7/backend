@@ -11,7 +11,7 @@ session={1:{'email':'test2222@skku.edu'}}
 auth_code={}
 
 user_info_key=['nickname','user_email']
-user_schema=['User_email','nickname','accumulate-star','join-content']
+user_schema=['user_email','nickname','accumulate-star','join-content']
 
 def getUser(token):
     return session[int(token)]
@@ -57,7 +57,7 @@ def register():
         user_collection=db.user
         if user_collection.count_documents({'user_email':email})>0:
             return jsonify({'message':'email already exist'}),202
-        user_collection.insert_one({'user_email':email,'User_pw':generate_password_hash(password),'nickname':nickname,'accumulate-star':0,'star-count':0,'join-content':[]})
+        user_collection.insert_one({'user_email':email,'user_pw':generate_password_hash(password),'nickname':nickname,'accumulate-star':0,'star-count':0,'join-content':[]})
         return jsonify({"message":"register success"}),200
     except Exception as e:
         return jsonify({'error':str(e)}),301
@@ -66,7 +66,7 @@ def register():
 def getinfo():
     try:
         email=request.args.get('email')
-        raw=db.user.find_one({'User_email':email})
+        raw=db.user.find_one({'user_email':email})
         if raw:
             result={k:v for k,v in raw.items() if k in user_schema}
             result['star']=round(raw['accumulate-star']/raw['star-count'],1) if not raw['star-count']==0 else 3.0
@@ -78,7 +78,7 @@ def getinfo():
 def getJoinList():
     try:
         email=getUser(request.args.get('token'))['email']
-        result=db.user.find_one({'User_email':email}).get('join-content')
+        result=db.user.find_one({'user_email':email}).get('join-content')
         if result!=None:
             return jsonify({'joinlist':result}),200
         return jsonify({'message':"wrong token"}),201

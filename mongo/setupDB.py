@@ -10,7 +10,7 @@ def createUser():
             "title" : "User_schema",
             "description" : "User schema contains email, password",
             "bsonType" : "object",
-            "required" : ["User_email", "User_pw"],
+            "required" : ["user_email", "user_pw"],
             "properties" : {
                 "User_email" : {
                     "bsonType" : "string",
