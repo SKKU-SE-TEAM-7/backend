@@ -10,7 +10,7 @@ session={1:{'email':'test2222@skku.edu'}}
 
 auth_code={}
 
-user_info_key=['nickname','User_email']
+user_info_key=['nickname','user_email']
 user_schema=['User_email','nickname','accumulate-star','join-content']
 
 def getUser(token):
@@ -19,8 +19,8 @@ def getUser(token):
 def check_login(email,pw):
     try:
         user_collection=db.user
-        if valid:=user_collection.find_one({'User_email':email}):
-            if check_password_hash(valid.get("User_pw"),pw):
+        if valid:=user_collection.find_one({'user_email':email}):
+            if check_password_hash(valid.get("user_password"),pw):
                 while True:
                     if not session.get(token:=random.randint(10000000,100000000)):break
                 session[token]={"email":email}
@@ -55,9 +55,9 @@ def register():
         if not (auth_code.get(email) and auth_code[email]==int(code)):
             return jsonify({'message':'auth code'}),201
         user_collection=db.user
-        if user_collection.count_documents({'User_email':email})>0:
+        if user_collection.count_documents({'user_email':email})>0:
             return jsonify({'message':'email already exist'}),202
-        user_collection.insert_one({'User_email':email,'User_pw':generate_password_hash(password),'nickname':nickname,'accumulate-star':0,'star-count':0,'join-content':[]})
+        user_collection.insert_one({'user_email':email,'User_pw':generate_password_hash(password),'nickname':nickname,'accumulate-star':0,'star-count':0,'join-content':[]})
         return jsonify({"message":"register success"}),200
     except Exception as e:
         return jsonify({'error':str(e)}),301
@@ -88,7 +88,7 @@ def getJoinList():
 def giveReview():
     try:
         email=request.args.get('email')
-        db.user.update_one({'User_email':email},{'$inc':{'accumulate-star':int(request.args.get('star')),'star-count':1}})
+        db.user.update_one({'user_email':email},{'$inc':{'accumulate-star':int(request.args.get('star')),'star-count':1}})
         return jsonify({'message':'review success'}),200
     except Exception as e:
         return jsonify({'error':str(e)}),501
