@@ -6,9 +6,11 @@ import random
 import smtplib
 from email.mime.text import MIMEText
 
-session={1:{'email':'test2222@skku.edu'}}
+session={}
 
 auth_code={}
+
+have_session={}
 
 user_info_key=['nickname','user_email']
 user_schema=['user_email','nickname','accumulate-star','join-content']
@@ -31,7 +33,10 @@ def login():
             if check_password_hash(valid.get("user_password"),password):
                 while True:
                     if not session.get(token:=random.randint(10000000,100000000)):break
+                if have_session.get(email):
+                    session.pop(have_session[email])
                 session[token]={"email":email}
+                have_session[email] = token
                 return jsonify({"message":"login success","token":token}) ,200
             return jsonify({"message":"invalid password"}),201
         return jsonify({'message':"invalid email"}),202
@@ -45,11 +50,11 @@ def register():
         password=request.form.get('user_password')
         nickname=request.form.get('nickname')
         code=request.form.get('authcode')
-        if not (auth_code.get(email) and auth_code[email]==int(code)):
-            return jsonify({'message':'auth code'}),201
         user_collection=db.user
         if user_collection.count_documents({'user_email':email})>0:
             return jsonify({'message':'email already exist'}),202
+        if not (auth_code.get(email) and auth_code[email]==int(code)):
+            return jsonify({'message':'auth code'}),201
         user_collection.insert_one({'user_email':email,'user_password':generate_password_hash(password),'nickname':nickname,'accumulate-star':0,'star-count':0,'join-content':[]})
         return jsonify({"message":"register success"}),200
     except Exception as e:
@@ -89,7 +94,7 @@ def giveReview():
 def authcode():
     try:
         email=request.args.get('user_email')
-        if db.user_collection.count_documents({'User_email':email})>0:
+        if db.user_collection.count_documents({'user_email':email})>0:
             return jsonify({'message':'email already exist'}),201
         if not email.split('@')[1] in ['skku.edu','g.skku.edu']:
             return jsonify({'message':'not allowed domain'}), 202

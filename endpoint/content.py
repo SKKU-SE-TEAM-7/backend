@@ -62,12 +62,29 @@ def join():
             return jsonify({"message":"wrong content id"}),201
         if joined['currentMember']==joined['targetMember']:
             return jsonify({'message':"Exceed Member"}),201
+        if email in joined['participant']:
+            return jsonify({'message':"already joined"}),201
         db.content.update_one({'content-id':int(request.args.get('content-id'))}, {"$push":{'participant':email},"$inc":{'currentMember':1}})
         while True:
             if not db.chat.count_documents({"chat-id":(id:=random.randint(1,10000000))}):break
         db.chat.insert_one({'owner':joined['owner'],'participant':email,'chats':[],'chat-id':id})
-        db.user.update_one({'User_email':email},{'$push':{'join-content':request.args.get('content-id')}})
+        db.user.update_one({'user_email':email},{'$push':{'join-content':request.args.get('content-id')}})
         return jsonify({"message":"join success"}),200
+    except Exception as e:
+        return jsonify({"error":str(e)}),502
+@app.route('/content/canceljoin',methods=['GET'])
+def join():
+    try:
+        email=user.getUser(request.args.get('token'))['email']
+        joined=db.content.find_one({'content-id':int(request.args.get('content-id'))})
+        if not joined:
+            return jsonify({"message":"wrong content id"}),201
+        if not email in joined['participant']:
+            return jsonify({'message':"not joined yet"}),201
+        db.content.update_one({'content-id':int(request.args.get('content-id'))}, {"$pop":{'participant':email},"$dec":{'currentMember':1}})
+        db.chat.delete_one({'chat-id':id})
+        db.user.update_one({'user_email':email},{'$pop':{'join-content':request.args.get('content-id')}})
+        return jsonify({"message":"cancel join success"}),200
     except Exception as e:
         return jsonify({"error":str(e)}),502
 @app.route('/content/search',methods=['GET'])
