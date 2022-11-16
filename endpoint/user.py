@@ -14,7 +14,6 @@ user_info_key=['nickname','User_email']
 user_schema=['User_email','nickname','accumulate-star','join-content']
 
 def getUser(token):
-    print(session)
     return session[int(token)]
 
 def check_login(email,pw):
@@ -29,7 +28,6 @@ def check_login(email,pw):
                 return token
             return None
     except Exception as e:
-        print(e)
         return None
 
 
@@ -81,7 +79,6 @@ def getJoinList():
     try:
         email=getUser(request.args.get('token'))['email']
         result=db.user.find_one({'User_email':email}).get('join-content')
-        print(result)
         if result!=None:
             return jsonify({'joinlist':result}),200
         return jsonify({'message':"wrong token"}),201

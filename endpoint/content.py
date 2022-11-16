@@ -7,14 +7,6 @@ import datetime
 
 content_schema=['title','detail','targetMember','dueDate','content-id','image-url','owner','currentMember']
 
-def find_recent():
-    try:
-        content_collection=db.content
-        contents=content_collection.find({}).sort([('creation_time',1)]).limit(20)
-        return contents
-    except Exception as e:
-        print(e)
-        return False
 
 @app.route('/content')
 @app.route('/content/new',methods=['POST'])
@@ -55,7 +47,8 @@ def get_content():
 @app.route('/content/getRecent',methods=['GET'])
 def get_recent():
     try:
-        raw=find_recent()
+        content_collection=db.content
+        raw=content_collection.find({}).sort([('creation_time',1)]).limit(20)
         contents=[{key:item for key,item in x.items() if key in content_schema} for x in raw]
         return jsonify({'list':contents}),200
     except Exception as e:
