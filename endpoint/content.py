@@ -4,9 +4,24 @@ from mongo.connection import db
 from . import user
 import random
 import datetime
+import base64
+import boto3
 
-content_schema=['title','detail','targetMember','dueDate','content-id','image-url','owner','currentMember']
 
+
+
+
+content_schema=['title','detail','targetMember','duedate','content-id','image-url','owner','currentMember']
+ACCESS_KEY_ID = 'AKIA2LLNWSDK6NBEWXTL'
+ACCESS_SECRET_KEY = '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'
+BUCKET_NAME = 'skkuseteam7'
+
+def uploadImage(data,format,fileid):
+    print(data,format,fileid)
+    if not (data and format and fileid): return ''
+    s3 = boto3.resource('s3',aws_access_key_id=ACCESS_KEY_ID,aws_secret_access_key=ACCESS_SECRET_KEY)
+    s3.Bucket(BUCKET_NAME).put_object(Key='static/image/'+fileid+"."+format, Body=base64.b64decode(data), ContentType='image/'+format)    
+    return 'skkuseteam7.s3.ap-northeast-2.amazonaws.com/static/image/'+fileid+"."+format
 
 @app.route('/content')
 @app.route('/content/new',methods=['POST'])
@@ -20,9 +35,11 @@ def post_content():
         data['image-url']= "url"
         data['targetMember']=int(data['targetMember'])
         email = user.getUser(request.args.get('token'))['email']
+        data['image-url'] = uploadImage(request.form.get('image'),request.form.get('imageformat'),str(id))
         data['owner']=email
         data['currentMember']=0
         data['participant']=[]
+        del data['image']
         data['creation_time']=str(datetime.datetime.now())
         if content_collection.insert_one(data):
             return jsonify({"message":"upload success","data":{k:d for k,d in data.items() if type(d) is str}}),200
