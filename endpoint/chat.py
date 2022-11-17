@@ -11,7 +11,7 @@ def getRoomList():
         email=user.getUser(request.args.get('token'))['email']
         result=db.chat.find({'$or':[{'owner':email},{'participant':email}]})
         if result:
-            chatList=[{'chat-id':x['chat-id'],'owner':x['owner'],'participant':x['participant']}for x in result]
+            chatList=[{'chat-id':x['chat-id'],'owner':x['owner'],'participant':x['participant'],'content-id':x['content-id']}for x in result]
         return jsonify({'chatList':chatList}),200
     except Exception as e:
         return jsonify({"error":str(e)}),501
@@ -22,7 +22,7 @@ def getChat():
         chat = db.chat.find_one({'chat-id':int(request.args.get('chat-id'))})
         if not user.getUser(request.args.get('token'))['email'] in [chat['owner'],chat['participant']]:
             return jsonify({'message':'invalid access'}),201
-        info={'chat-id':chat['chat-id'],'owner':chat['owner'],'participant':chat['participant'],'chats':chat['chats']}
+        info={'chat-id':chat['chat-id'],'owner':chat['owner'],'participant':chat['participant'],'chats':chat['chats'],'content-id':chat['content-id']}
         if chat:
             return jsonify({'chat-info':info}),200
     except Exception as e:
