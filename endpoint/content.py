@@ -17,7 +17,6 @@ ACCESS_SECRET_KEY = 'ABj65ezTAV9sdL7XLxfnkubtd/rOaKNhh1dfgS7n'
 BUCKET_NAME = 'skkuseteam7'
 
 def uploadImage(data,format,fileid):
-    print(data,format,fileid)
     if not (data and format and fileid): return ''
     s3 = boto3.resource('s3',aws_access_key_id=ACCESS_KEY_ID,aws_secret_access_key=ACCESS_SECRET_KEY)
     s3.Bucket(BUCKET_NAME).put_object(Key='static/image/'+fileid+"."+format, Body=base64.b64decode(data), ContentType='image/'+format)    
