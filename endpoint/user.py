@@ -67,6 +67,7 @@ def getinfo():
         raw=db.user.find_one({'user_email':email})
         if raw:
             result={k:v for k,v in raw.items() if k in user_schema}
+            result['join-content']=result['join-content']+[str(x['content-id']) for x in db.content.find({'owner':email})]
             result['star']=round(raw['accumulate-star']/raw['star-count'],1) if not raw['star-count']==0 else 3.0
             return jsonify({'user_info':result}),200
         return jsonify({'message':"wrong email"}),201
