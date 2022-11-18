@@ -38,3 +38,12 @@ def sendChat():
             return jsonify({'message':"send success"}),200
     except Exception as e:
         return jsonify({'error':str(e)}),501
+@app.route('/chat/receive',methods=['GET'])
+def receiveItem():
+    try:
+        contentId=db.chat.find_one({'chat-id':int(request.args.get('chat-id'))})['content-id']
+        db.chat.delete_one({'chat-id':int(request.args.get('chat-id'))})
+        db.user.update_one({'user_email':user.getUser(request.args.get('token'))['email']},{'$pull':{'join-content':contentId}})
+        return jsonify({'message':"receive confirmed"}),200
+    except Exception as e:
+        return jsonify({'error':str(e)}),501

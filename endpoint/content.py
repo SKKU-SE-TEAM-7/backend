@@ -86,7 +86,7 @@ def join():
         db.content.update_one({'content-id':int(request.args.get('content-id'))}, {"$push":{'participant':email},"$inc":{'currentMember':1}})
         while True:
             if not db.chat.count_documents({"chat-id":(id:=random.randint(1,10000000))}):break
-        db.chat.insert_one({'owner':joined['owner'],'participant':email,'content-id':int(request.args.get('content-id')),'chats':[],'chat-id':id})
+        db.chat.insert_one({'owner':joined['owner'],'participant':email,'content-id':int(request.args.get('content-id')),'chats':[],'chat-id':id,'receive':False})
         db.user.update_one({'user_email':email},{'$push':{'join-content':request.args.get('content-id')}})
         return jsonify({"message":"join success"}),200
     except Exception as e:
