@@ -11,7 +11,7 @@ import boto3
 
 
 
-content_schema=['title','detail','targetMember','duedate','content-id','image-url','owner','currentMember']
+content_schema=['title','detail','targetMember','duedate','content-id','image-url','owner','currentMember','ownerNickname']
 ACCESS_KEY_ID = 'AKIA2LLNWSDK6NBEWXTL'
 ACCESS_SECRET_KEY = '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'
 BUCKET_NAME = 'skkuseteam7'
@@ -38,6 +38,7 @@ def post_content():
         data['owner']=email
         data['currentMember']=0
         data['participant']=[]
+        data['ownerNickname']=db.user.find_one({'user_email':email})['nickname']
         del data['image']
         data['creation_time']=str(datetime.datetime.now())
         if content_collection.insert_one(data):
