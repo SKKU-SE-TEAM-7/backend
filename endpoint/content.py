@@ -99,7 +99,6 @@ def canceljoin():
         if not joined:
             return jsonify({"message":"wrong content id"}),201
         if not email in joined['participant']:
-            print(joined['participant'])
             return jsonify({'message':"not joined yet"}),202
         db.content.update_one({'content-id':int(request.args.get('content-id'))}, {"$pull":{'participant':email},"$inc":{'currentMember':-1}})
         db.chat.delete_one({'content-id':int(request.args.get('content-id'))})
