@@ -44,6 +44,7 @@ def receiveItem():
         contentId=db.chat.find_one({'chat-id':int(request.args.get('chat-id'))})['content-id']
         db.chat.delete_one({'chat-id':int(request.args.get('chat-id'))})
         db.user.update_one({'user_email':user.getUser(request.args.get('token'))['email']},{'$pull':{'join-content':contentId}})
+        db.content.update_one({'content-id':contentId},{'$pull':{'participant':user.getUser(request.args.get('token'))['email']}})
         return jsonify({'message':"receive confirmed"}),200
     except Exception as e:
         return jsonify({'error':str(e)}),501
